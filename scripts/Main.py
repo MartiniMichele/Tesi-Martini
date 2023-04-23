@@ -45,8 +45,15 @@ def imgen_case():
     images_directory = input(
         "\nINSERIRE IL NOME DELLA CARTELLA IN CUI SI SALVARE LE IMMAGINI (sottocartella di "
         "'IMMAGINI CGR')").lower()
+    isFCGR = input(
+        "\nCHE TIPO DI IMMAGINI GENERARE? \n1: CGR \n2: FCGR \nla tua scelta: ")
     handler_istance = CGRHandler("RNA", False, False, fasta_directory, images_directory)
-    handler_istance.read_files()
+    match isFCGR:
+        case "1":
+            handler_istance.read_files(False, 0)
+        case "2":
+            k = input("SCEGLIERE LUNGHEZZA DEI K-MER: ")
+            handler_istance.read_files(True, int(k))
 
 
 '''
@@ -77,7 +84,7 @@ def cnn_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_l
 
         case "N":
             datagen_list = cnn_instance.datagen()
-            history = cnn_instance.train(model, datagen_list[0], datagen_list[1])
+            cnn_instance.train(model, datagen_list[0], datagen_list[1])
 
 
 main()

@@ -1,7 +1,9 @@
-from scripts.cgr import CGRepresentation
+from scripts.cgr import CGRepresentation, FCGR
 import os
 from pathlib import Path
 from Bio.Seq import MutableSeq
+
+from scripts.cgr.FCGR import FrequencyCGR
 
 '''
 Questa classe ha il compito di gestire la generazione di immagini CGR tramite l'utilizzo del codice della libreria
@@ -32,7 +34,6 @@ class CGRHandler:
         self.data_dir = Path(str(self.source_dir) + "/FASTA/%s/" % self.data_dir)
         image_dir = Path(str(self.source_dir) + "/IMMAGINI_CGR")
         self.save_dir = Path(str(image_dir) + "/%s" % self.save_dir)
-        #self.save_dir = Path(str(self.source_dir) + "/IMMAGINI_CGR/%s" % self.save_dir)
         os.chdir(image_dir)
         if os.path.isdir(self.save_dir) is False:
             os.makedirs(self.save_dir)
@@ -41,7 +42,7 @@ class CGRHandler:
     Questo metodo scorre i file fasta nella cartella selezionata e ne estrae la sequenza
     '''
 
-    def read_files(self):
+    def read_files(self, isFCGR, k):
 
         self.init_dirs()
 
@@ -69,7 +70,7 @@ class CGRHandler:
                 # call read text file function
                 read_fasta_file(file_path)
                 print(file_path)
-                self.generate_dataset(counter)
+                self.generate_dataset(counter, isFCGR, k)
                 counter += 1
 
     '''
@@ -159,12 +160,20 @@ class CGRHandler:
     per filtrare le sequenze
     '''
 
-    def generate_dataset(self, counter):
+    def generate_dataset(self, counter, isFCGR, k):
 
-        bio_sequence = self.filter_sequence(self.sequence)
-        print("SEQUENZA UTILIZZATA: " + bio_sequence)
-        print("COUNTER: " + str(counter))
-        drawer = CGRepresentation.CGR(bio_sequence, self.CGR_type, self.outer_representation, self.rna_2structure)
-        drawer.representation()
-        path = Path(str(self.save_dir) + "/CGR_RNA_" + str(counter) + ".png")
-        drawer.plot(counter, path)
+        if isFCGR:
+            fcgr_sequence = self.filter_sequence(self.sequence)
+            print("SEQUENZA UTILIZZATA: " + fcgr_sequence)
+            print("COUNTER: " + str(counter))
+            drawer = FrequencyCGR(fcgr_sequence)
+            path = Path(str(self.save_dir) + "/FCGR_RNA_" + str(counter) + ".png")
+            drawer.save_fcgr(k, path)
+        else:
+            bio_sequence = self.filter_sequence(self.sequence)
+            print("SEQUENZA UTILIZZATA: " + bio_sequence)
+            print("COUNTER: " + str(counter))
+            drawer = CGRepresentation.CGR(bio_sequence, self.CGR_type, self.outer_representation, self.rna_2structure)
+            drawer.representation()
+            path = Path(str(self.save_dir) + "/CGR_RNA_" + str(counter) + ".png")
+            drawer.plot(counter, path)
