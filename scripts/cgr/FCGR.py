@@ -69,7 +69,6 @@ class FrequencyCGR:
         # show with
         pylab.figure(figsize=(5, 5))
         pylab.imshow(chaos, cmap=matplotlib.colormaps.get_cmap('gray'))
-        pylab.plot()
         pylab.axis('off')
         pylab.xticks([])
         pylab.yticks([])

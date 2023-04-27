@@ -29,12 +29,16 @@ class CGRHandler:
     '''
     Inizializza le cartelle utili alla CNN
     '''
-    def init_dirs(self):
+    def init_dirs(self, save_dir):
         # cartelle urilizzate per l'esperimento
         self.data_dir = Path(str(self.source_dir) + "/FASTA/%s/" % self.data_dir)
-        image_dir = Path(str(self.source_dir) + "/IMMAGINI_CGR")
-        self.save_dir = Path(str(image_dir) + "/%s" % self.save_dir)
-        os.chdir(image_dir)
+        cgr_dir = Path(str(self.source_dir) + save_dir)
+
+        if os.path.isdir(cgr_dir) is False:
+            os.makedirs(cgr_dir)
+        self.save_dir = Path(str(cgr_dir) + "/%s" % self.save_dir)
+
+        os.chdir(cgr_dir)
         if os.path.isdir(self.save_dir) is False:
             os.makedirs(self.save_dir)
 
@@ -44,7 +48,11 @@ class CGRHandler:
 
     def read_files(self, isFCGR, k):
 
-        self.init_dirs()
+        if isFCGR:
+            self.init_dirs("/IMMAGINI_FCGR")
+        else:
+            self.init_dirs("/IMMAGINI_CGR")
+
 
         # Folder Path
         source_path = Path(__file__).resolve()

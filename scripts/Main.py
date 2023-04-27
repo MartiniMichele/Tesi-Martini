@@ -19,7 +19,7 @@ def main():
     patience = 5
 
     print("SCEGLI IL PROCESSO DA ESEGUIRE:\n")
-    print("1: GENERAZIONE IMMAGINI CGR DA SEQUENZE RNA")
+    print("1: GENERAZIONE IMMAGINI DA SEQUENZE RNA")
     print("2: CLASSIFICAZIONE IMMAGINI TRAMITE CNN")
     print("3: GENERAZIONE IMMAGINI E CLASSIFICAZIONE")
     process_input = input("la tua scelta: ")
@@ -42,17 +42,21 @@ def imgen_case():
     fasta_directory = input(
         "\nINSERIRE IL NOME DELLA CARTELLA IN CUI SI TROVANO I FILE FASTA (sottocartella di "
         "'FASTA')").lower()
-    images_directory = input(
-        "\nINSERIRE IL NOME DELLA CARTELLA IN CUI SI SALVARE LE IMMAGINI (sottocartella di "
-        "'IMMAGINI CGR')").lower()
     isFCGR = input(
         "\nCHE TIPO DI IMMAGINI GENERARE? \n1: CGR \n2: FCGR \nla tua scelta: ")
-    handler_istance = CGRHandler("RNA", False, False, fasta_directory, images_directory)
     match isFCGR:
         case "1":
+            images_directory = input(
+                "\nINSERIRE IL NOME DELLA CARTELLA IN CUI SI SALVARE LE IMMAGINI (sottocartella di "
+                "'IMMAGINI CGR')").lower()
+            handler_istance = CGRHandler("RNA", False, False, fasta_directory, images_directory)
             handler_istance.read_files(False, 0)
         case "2":
+            images_directory = input(
+                "\nINSERIRE IL NOME DELLA CARTELLA IN CUI SI SALVARE LE IMMAGINI (sottocartella di "
+                "'IMMAGINI FCGR')").lower()
             k = input("SCEGLIERE LUNGHEZZA DEI K-MER: ")
+            handler_istance = CGRHandler("RNA", False, False, fasta_directory, images_directory)
             handler_istance.read_files(True, int(k))
 
 
