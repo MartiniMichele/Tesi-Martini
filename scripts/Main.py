@@ -1,6 +1,7 @@
 from scripts.cgr.CGRHandler import CGRHandler
 from scripts.cnn.CNN import CNN
 from scripts.cnn.ResultPlotter import ResultPlotter
+import platform
 
 '''
 Metodo per l'implementazione della CLI, sfrutta altri metodi per semplificare la lettura
@@ -57,7 +58,7 @@ def imgen_case():
                 "'IMMAGINI FCGR')").lower()
             k = input("SCEGLIERE LUNGHEZZA DEI K-MER: ")
             handler_istance = CGRHandler("RNA", False, False, fasta_directory, images_directory)
-            handler_istance.read_files(True, int(k))
+            handler_istance.read_file(int(k))
 
 
 '''

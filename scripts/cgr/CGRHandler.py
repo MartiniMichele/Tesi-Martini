@@ -4,6 +4,7 @@ from pathlib import Path
 from Bio.Seq import MutableSeq
 
 from scripts.cgr.FCGR import FrequencyCGR
+from Levenshtein import distance as levenshtein_distance
 
 '''
 Questa classe ha il compito di gestire la generazione di immagini CGR tramite l'utilizzo del codice della libreria
@@ -15,7 +16,6 @@ class CGRHandler:
     source_path = Path(__file__).resolve()
     source_dir = Path(source_path.parent.parent.parent)
 
-    # in futuro cambiare il costruttore per poter scegliere le modalità della CGR
     def __init__(self, CGR_type, outer_representation, rna_2structure, data_dir, save_dir):
         self.CGR_type = CGR_type
         self.outer_representation = outer_representation
@@ -185,3 +185,64 @@ class CGRHandler:
             drawer.representation()
             path = Path(str(self.save_dir) + "/CGR_RNA_" + str(counter) + ".png")
             drawer.plot(counter, path)
+
+    def read_file(self, k):
+        self.init_dirs("/IMMAGINI_FCGR")
+
+        # Folder Path
+        source_path = Path(__file__).resolve()
+        source_dir = Path(source_path.parent.parent.parent)
+        file_path = Path(str(source_dir) + "/FASTA/%s" % self.source)
+
+        sequences = []
+
+        with open(file_path, 'r') as f:
+            tmp_str = f.name.split(".")[0].split("_")
+            image_name = tmp_str[len(tmp_str) - 1]
+            seq = ''
+            for line in f:
+                if line.startswith('>'):
+                    if seq:
+                        sequences.append(seq)
+                        seq = ''
+                else:
+                    seq += line.strip()
+            sequences.append(seq)
+
+        '''
+        Metodo usato per comparare due sequenze
+        '''
+
+        def similarity(seq1, seq2):
+            edit_distance = levenshtein_distance(seq1, seq2)
+            max_length = max(len(seq1), len(seq2))
+            return 1 - (edit_distance / max_length)
+
+        similar_sequences = [sequences[0]]
+        for i in range(1, len(sequences)):
+            is_similar = False
+            for j, seq in enumerate(similar_sequences):
+                sim = similarity(sequences[i], seq)
+                if sim > 0.8:
+                    is_similar = True
+                    print(
+                        f"La sequenza {i + 1} è simile di più dell'80% alla sequenza {j + 1} già inserita nella lista")
+                    break
+            if not is_similar:
+                similar_sequences.append(sequences[i])
+                print(f"La sequenza {i + 1} è stata aggiunta alla lista")
+
+        print(f"Sono state trovate {len(similar_sequences)} sequenze non simili più dell'80%")
+        self.generate_dataset_from_list(similar_sequences, k, image_name)
+
+    def generate_dataset_from_list(self, sequence_list, k, image_name):
+        for i, sequence in enumerate(sequence_list):
+            counter = i + 1
+            print(f"L'elemento {counter} è: {sequence}")
+            bio_sequence = self.filter_sequence(sequence)
+            print("SEQUENZA UTILIZZATA: " + bio_sequence)
+            print("COUNTER: " + str(counter))
+            correct_sequence = bio_sequence.replace("T", "U")
+            drawer = FrequencyCGR(correct_sequence)
+            path = Path(str(self.save_dir) + f"/{image_name}_" + str(counter) + ".png")
+            drawer.save_fcgr(k, path)
