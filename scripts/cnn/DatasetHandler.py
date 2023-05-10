@@ -8,10 +8,10 @@ import glob
 source_path = Path(__file__).resolve()
 source_dir = Path(source_path.parent.parent.parent)
 
-database = "Superkingdom"
-livello = "16S"
+database = "lsu"
+livello = "archaea"
 completo = "%s_%s" % (database, livello)
-sottoclasse = "Eukaryota"
+sottoclasse = "archaea"
 
 dataset_dir = Path(str(source_dir) + "/Classification/%s_DATASET/" % completo.upper())
 data_dir = Path(str(source_dir) + "/Classification/IMMAGINI DA DIVIDERE/%s/%s" % (completo, sottoclasse))
@@ -28,7 +28,7 @@ la proporzione 70/20/10 nelle rispettive cartelle train/valid/test
 if len(os.listdir(train_dir)) == 0:
     for x in filelist:
         if x != "DATASET":
-            sub_dir_path.append(data_dir + x + '/')
+            sub_dir_path.append(str(data_dir) + x + '/')
     for x in sub_dir_path:
         print(str(x))
 
@@ -54,38 +54,36 @@ if len(os.listdir(train_dir)) == 0:
             shutil.move(source_path, test_dir)
 
 
-'''
-controlla se è presente la cartella "Actinobacteria"(può variare) comune a tutte e 3 le cartelle(train, valid, test) e quindi sicuramente presente
-se si va avanti e crea le sottocartelle(labels) con i nomi dei phylum presenti.
-Per creare le cartelle dei labels vengono letti tutti i file .png, viene estratta la prima parte del nome relativa al phylum
-e poi ci viene spostato il file
-'''
-if os.path.isdir(os.path.abspath(os.path.join(train_dir, "Apicomplexa/"))) is False:
+'''controlla se è presente la cartella "Actinobacteria"(può variare) comune a tutte e 3 le cartelle(train, valid, 
+test) e quindi sicuramente presente. Se sono presenti va avanti e crea le sottocartelle(labels) con i nomi dei phylum presenti. 
+Per creare le cartelle dei labels vengono letti tutti i file .png, viene estratta la prima parte del nome relativa al 
+phylum e poi ci viene spostato il file'''
+if os.path.isdir(os.path.abspath(os.path.join(train_dir, "archaea/"))) is False:
     os.chdir(train_dir)
     for file in os.listdir():
         if file.endswith('.png'):
             phylum = file.split('_')[0]
             if os.path.isdir(phylum) is False:
                 os.makedirs(phylum)
-            dir_path = train_dir + phylum
+            dir_path = str(train_dir) + phylum
             shutil.move(file, dir_path)
 
-if os.path.isdir(os.path.abspath(os.path.join(valid_dir, "Apicomplexa/"))) is False:
+if os.path.isdir(os.path.abspath(os.path.join(valid_dir, "archaea/"))) is False:
     os.chdir(valid_dir)
     for file in os.listdir():
         if file.endswith('.png'):
             phylum = file.split('_')[0]
             if os.path.isdir(phylum) is False:
                 os.makedirs(phylum)
-            dir_path = valid_dir + phylum
+            dir_path = str(valid_dir) + phylum
             shutil.move(file, dir_path)
 
-if os.path.isdir(os.path.abspath(os.path.join(test_dir, "Apicomplexa/"))) is False:
+if os.path.isdir(os.path.abspath(os.path.join(test_dir, "archaea/"))) is False:
     os.chdir(test_dir)
     for file in os.listdir():
         if file.endswith('.png'):
             phylum = file.split('_')[0]
             if os.path.isdir(phylum) is False:
                 os.makedirs(phylum)
-            dir_path = test_dir + phylum
+            dir_path = str(test_dir) + phylum
             shutil.move(file, dir_path)
