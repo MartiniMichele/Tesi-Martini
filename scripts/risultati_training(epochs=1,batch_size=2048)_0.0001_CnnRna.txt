@@ -1,0 +1,3 @@
+Risultati training: 
+epoche:1	loss:0.97515	accuracy:0.45581	precision:0.54392	recall:0.40880	auroc:0.70509	F1:0.46678
+epoche:1	loss:0.78913	accuracy:0.57178	precision:0.57751	recall:0.53662	auroc:0.82098	F1:0.55631

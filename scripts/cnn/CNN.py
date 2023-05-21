@@ -48,8 +48,8 @@ class CNN:
         self.valid_dir = Path(str(self.source_dir) + "/Classification/DATASET/%s/valid/" % self.dataset)
         self.test_dir = Path(str(self.source_dir) + "/Classification/DATASET/%s/test/" % self.dataset)
 
-        models_dir = Path(str(self.source_dir) + "/CNN_models/")
-        save_model_dir = Path(str(self.source_dir) + "/CNN_models/%s/" % self.dataset)
+        ##models_dir = Path(str(self.source_dir) + "/CNN_models/")
+        ##save_model_dir = Path(str(self.source_dir) + "/CNN_models/%s/" % self.dataset)
 
         self.model_filename = "%s_model_%s_LR%s_batch%s_%sDropout(0.5)_%slayer(FL=%s)_epochs(%s)" % (
             self.dataset,
@@ -60,7 +60,13 @@ class CNN:
             self.n_layer,
             self.fl_filter,
             self.epochs)
-        self.create_model_dir(save_model_dir, self.model_filename)
+        ##self.create_model_dir(save_model_dir, self.model_filename)
+
+    def init_singularity_dirs(self):
+        data_dir = self.dataset
+        self.train_dir = "%s/train/" % self.dataset
+        self.valid_dir = "%s/valid/" % self.dataset
+        self.test_dir = "%s/test/" % self.dataset
 
     '''
     Crea la cartella dove salvare il modello di CNN
@@ -102,6 +108,22 @@ class CNN:
 
         return callbacks
 
+    def create_singularity_callbacks(self):
+        early_stopping = EarlyStopping(patience=self.patience, monitor='val_loss', verbose=1)
+
+        reduce_lr = ReduceLROnPlateau(monitor='val_loss', min_lr=0.001,
+                                      patience=self.patience, mode='min',
+                                      verbose=1)
+        hist = History()
+
+        callbacks = [
+            early_stopping,
+            reduce_lr,
+            hist
+        ]
+
+        return callbacks
+
     '''
     crea il modello della rete neurale
     '''
@@ -134,6 +156,36 @@ class CNN:
                       metrics=['accuracy', 'Precision', 'Recall', 'AUC'])
 
         self.init_dirs()
+        return model
+
+    def create_singularity_model(self):
+        last_n_filter = self.fl_filter
+        model = Sequential()
+        for i in range(self.n_layer):
+            if i == 0:
+                model.add(Conv2D(filters=last_n_filter, activation='relu', kernel_size=(3, 3),
+                                 input_shape=(self.img_width, self.img_height, 3)))
+                model.add(MaxPooling2D(pool_size=(2, 2)))
+            else:
+                last_n_filter = last_n_filter * 2
+                model.add(Conv2D(filters=last_n_filter, activation='relu', kernel_size=(3, 3),
+                                 input_shape=(self.img_width, self.img_height, 3)))
+                model.add(MaxPooling2D(pool_size=(2, 2)))
+
+        model.add(Flatten())
+        model.add(Dense(units=last_n_filter * 4, activation='relu', ))
+
+        for i in range(self.n_dropout):
+            model.add(Dropout(self.drop_value))
+
+        model.add(Dense(units=self.ol_units, activation='softmax'))
+
+        model.summary()
+
+        model.compile(loss='categorical_crossentropy', optimizer=RMSprop(learning_rate=self.lr),
+                      metrics=['accuracy', 'Precision', 'Recall', 'AUC'])
+
+        self.init_singularity_dirs()
         return model
 
     '''
@@ -169,7 +221,7 @@ class CNN:
         history = model.fit(train_generator, steps_per_epoch=train_generator.n // self.batch_size, epochs=self.epochs,
                             validation_data=validation_generator,
                             validation_steps=validation_generator.n // self.batch_size,
-                            callbacks=self.create_callbacks())
+                            callbacks=self.create_singularity_callbacks())
 
         return history
 
