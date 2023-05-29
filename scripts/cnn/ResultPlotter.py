@@ -9,11 +9,11 @@ class ResultPlotter:
         self.dataset = dataset
         self.model_filename = model_filename
         self.save_fig_dir = ""
+        self.actual_epochs = 0
 
         '''
         variabili comuni per la creazione dei grafici, estratte dalla storia del metodo fit
         '''
-        self.actual_epochs = len(history.history['loss'])
         self.xc = range(self.actual_epochs)
 
     source_path = Path(__file__).resolve()
@@ -52,6 +52,7 @@ class ResultPlotter:
     '''
 
     def drawall_graphs(self):
+        self.actual_epochs = len(self.history.history['loss'])
         self.init_graph_dir()
         self.loss_graph()
         self.accuracy_graph()
@@ -64,8 +65,8 @@ class ResultPlotter:
     '''
 
     def loss_graph(self):
-        train_loss = self.history['loss']
-        val_loss = self.history['val_loss']
+        train_loss = self.history.history['loss']
+        val_loss = self.history.history['val_loss']
         os.chdir(self.save_fig_dir)
 
         plt.figure()
@@ -84,8 +85,8 @@ class ResultPlotter:
     '''
 
     def accuracy_graph(self):
-        train_acc = self.history['accuracy']
-        val_acc = self.history['val_accuracy']
+        train_acc = self.history.history['accuracy']
+        val_acc = self.history.history['val_accuracy']
         os.chdir(self.save_fig_dir)
 
         plt.grid()
@@ -103,8 +104,8 @@ class ResultPlotter:
     '''
 
     def precision_graph(self):
-        train_precision = self.history['precision']
-        val_precision = self.history['val_precision']
+        train_precision = self.history.history['precision']
+        val_precision = self.history.history['val_precision']
         os.chdir(self.save_fig_dir)
 
         plt.grid()
@@ -122,8 +123,8 @@ class ResultPlotter:
     '''
 
     def recall_graph(self):
-        train_recall = self.history['recall']
-        val_recall = self.history['val_recall']
+        train_recall = self.history.history['recall']
+        val_recall = self.history.history['val_recall']
         os.chdir(self.save_fig_dir)
 
         plt.grid()
@@ -141,8 +142,8 @@ class ResultPlotter:
     '''
 
     def auroc_graph(self):
-        train_auc = self.history['auc']
-        val_auc = self.history['val_auc']
+        train_auc = self.history.history['auc']
+        val_auc = self.history.history['val_auc']
         os.chdir(self.save_fig_dir)
 
         plt.grid()

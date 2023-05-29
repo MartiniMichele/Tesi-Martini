@@ -48,8 +48,8 @@ class CNN:
         self.valid_dir = Path(str(self.source_dir) + "/Classification/DATASET/%s/valid/" % self.dataset)
         self.test_dir = Path(str(self.source_dir) + "/Classification/DATASET/%s/test/" % self.dataset)
 
-        ##models_dir = Path(str(self.source_dir) + "/CNN_models/")
-        ##save_model_dir = Path(str(self.source_dir) + "/CNN_models/%s/" % self.dataset)
+        models_dir = Path(str(self.source_dir) + "/CNN_models/")
+        save_model_dir = Path(str(self.source_dir) + "/CNN_models/%s/" % self.dataset)
 
         self.model_filename = "%s_model_%s_LR%s_batch%s_%sDropout(0.5)_%slayer(FL=%s)_epochs(%s)" % (
             self.dataset,
@@ -60,7 +60,7 @@ class CNN:
             self.n_layer,
             self.fl_filter,
             self.epochs)
-        ##self.create_model_dir(save_model_dir, self.model_filename)
+        self.create_model_dir(save_model_dir, self.model_filename)
 
     def init_singularity_dirs(self):
         data_dir = self.dataset

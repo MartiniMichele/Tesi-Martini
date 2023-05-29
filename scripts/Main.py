@@ -7,6 +7,8 @@ import platform
 Metodo per l'implementazione della CLI, sfrutta altri metodi per semplificare la lettura
 '''
 
+file_list = ["_LSU_rRNA_archaea.fa", "LSU_rRNA_eukarya.fa", "LSU_rRNA_bacteria.fa"]
+kmer_list = [1, 4, 7]
 
 def main():
     model_mk = 1
@@ -30,14 +32,21 @@ def main():
         case "2":
             cnn_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_layer, lr, patience)
         case "3":
-            imgen_case()
-            cnn_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_layer, lr, patience)
+            auto_case()
+            #imgen_case()
+            #cnn_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_layer, lr, patience)
 
 
 '''
 Metodo di supporto a main, contiene il codice per la scelta della generazione delle immagini
 '''
 
+
+def auto_case():
+    for fasta in file_list:
+        save_dir = fasta + "_" + "K" + str(kmer_list[0])
+        handler_istance = CGRHandler("RNA", False, False, fasta, save_dir)
+        handler_istance.read_file(kmer_list)
 
 def imgen_case():
     fasta_directory = input(

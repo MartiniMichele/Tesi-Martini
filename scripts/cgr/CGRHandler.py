@@ -186,7 +186,7 @@ class CGRHandler:
             path = Path(str(self.save_dir) + "/CGR_RNA_" + str(counter) + ".png")
             drawer.plot(counter, path)
 
-    def read_file(self, k):
+    def read_file(self, k_list):
         self.init_dirs("/IMMAGINI_FCGR")
 
         # Folder Path
@@ -233,9 +233,9 @@ class CGRHandler:
                 print(f"La sequenza {i + 1} è stata aggiunta alla lista")
 
         print(f"Sono state trovate {len(similar_sequences)} sequenze non simili più dell'80%")
-        self.generate_dataset_from_list(similar_sequences, k, image_name)
+        self.generate_dataset_from_list(similar_sequences, k_list, image_name)
 
-    def generate_dataset_from_list(self, sequence_list, k, image_name):
+    def generate_dataset_from_list(self, sequence_list, k_list, image_name):
         for i, sequence in enumerate(sequence_list):
             counter = i + 1
             print(f"L'elemento {counter} è: {sequence}")
@@ -244,5 +244,14 @@ class CGRHandler:
             print("COUNTER: " + str(counter))
             correct_sequence = bio_sequence.replace("T", "U")
             drawer = FrequencyCGR(correct_sequence)
-            path = Path(str(self.save_dir) + f"/{image_name}_" + str(counter) + ".png")
-            drawer.save_fcgr(k, path)
+            #path = Path(str(self.save_dir) + f"/{image_name}_" + str(counter) + ".png")
+
+            for k in k_list:
+
+                self.save_dir = self.save_dir if str(self.save_dir).endswith(str(k)) else Path(str(self.save_dir).rsplit("_", 1)[0] + "_" + "K" + str(k))
+
+                if os.path.isdir(self.save_dir) is False:
+                    os.makedirs(self.save_dir)
+                print("K-MER ATTUALE: " + str(k))
+                path = Path(str(self.save_dir) + f"/{image_name}_" + str(counter) + ".png")
+                drawer.save_fcgr(k, path)
