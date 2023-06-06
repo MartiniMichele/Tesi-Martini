@@ -1,6 +1,7 @@
 from scripts.cgr.CGRHandler import CGRHandler
 from scripts.cnn.CNN import CNN
 from scripts.cnn.ResultPlotter import ResultPlotter
+from pathlib import Path
 import platform
 
 '''
@@ -8,12 +9,14 @@ Metodo per l'implementazione della CLI, sfrutta altri metodi per semplificare la
 '''
 
 file_list = ["_LSU_rRNA_archaea.fa", "LSU_rRNA_eukarya.fa", "LSU_rRNA_bacteria.fa"]
+dataset_list = ["lsu_dataset_1K", "lsu_dataset_4K", "lsu_dataset_7K"]
 kmer_list = [1, 4, 7]
+
 
 def main():
     model_mk = 1
     batch_size = 32
-    epochs = 25
+    epochs = 30
     fl_filter = 32
     n_dropout = 1
     drop_value = 0.5
@@ -32,9 +35,9 @@ def main():
         case "2":
             cnn_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_layer, lr, patience)
         case "3":
-            auto_case()
-            #imgen_case()
-            #cnn_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_layer, lr, patience)
+            auto_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_layer, lr, patience)
+            # imgen_case()
+            # cnn_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_layer, lr, patience)
 
 
 '''
@@ -42,11 +45,30 @@ Metodo di supporto a main, contiene il codice per la scelta della generazione de
 '''
 
 
-def auto_case():
-    for fasta in file_list:
-        save_dir = fasta + "_" + "K" + str(kmer_list[0])
-        handler_istance = CGRHandler("RNA", False, False, fasta, save_dir)
-        handler_istance.read_file(kmer_list)
+def auto_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_layer, lr, patience):
+    for dataset in dataset_list:
+            dataset_directory = dataset.upper()
+            k = int(dataset_directory.rsplit("_", 1)[1].replace("K", ""))
+            print(f"DATASET UTILIZZATO: {dataset_directory}")
+
+            cnn_instance = CNN(dataset_directory, model_mk, batch_size, epochs, fl_filter, 3, n_dropout, drop_value,
+                               n_layer, lr, patience)
+
+            print("RIEPILOGO RETE:")
+            model = cnn_instance.create_model()
+            print("----------GENERAZIONE BATCH DI DATI ED INIZIO TRAINING----------")
+            datagen_list = cnn_instance.datagen()
+            ########################
+            ######## TRAIN
+            ########################
+            history = cnn_instance.train(model, datagen_list[0], datagen_list[1])
+            save_train_val_to_txt(history, epochs, batch_size, lr, k)
+            ########################
+            ######## TEST
+            ########################
+            score = cnn_instance.test_evaluate(model, datagen_list[2])
+            save_test_to_txt(score, epochs, batch_size, lr, k)
+
 
 def imgen_case():
     fasta_directory = input(
@@ -67,7 +89,7 @@ def imgen_case():
                 "'IMMAGINI FCGR')").lower()
             k = input("SCEGLIERE LUNGHEZZA DEI K-MER: ")
             handler_istance = CGRHandler("RNA", False, False, fasta_directory, images_directory)
-            handler_istance.read_file(int(k))
+            handler_istance.read_file(kmer_list)
 
 
 '''
@@ -100,5 +122,60 @@ def cnn_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_l
             datagen_list = cnn_instance.datagen()
             cnn_instance.train(model, datagen_list[0], datagen_list[1])
 
+
+def save_train_val_to_txt(history, epochs, batch_size, lr, k):
+    actual_train_epochs = len(history.history['loss'])
+    train_loss = min(history.history['loss'])
+    train_accuracy = max(history.history['accuracy'])
+    train_precision = max(history.history['precision'])
+    train_recall = max(history.history['recall'])
+    train_auc = max(history.history['auc'])
+    train_f1 = 2 * (train_precision * train_recall) / (train_precision + train_recall)
+
+    val_loss = min(history.history['val_loss'])
+    val_accuracy = max(history.history['val_accuracy'])
+    val_precision = max(history.history['val_precision'])
+    val_recall = max(history.history['val_recall'])
+    val_auc = max(history.history['val_auc'])
+    val_f1 = 2 * (val_precision * val_recall) / (val_precision + val_recall)
+
+    train_results_path = f"risultati_training_{k}K(epochs={epochs},batch_size={batch_size})"
+    #Path(train_results_path).mkdir(parents=True, exist_ok=True)
+
+    training_output_filename = f"{train_results_path}_{lr}_CnnRna.txt"
+    with open(training_output_filename, "w") as out_file:
+        out_file.write("Risultati training: \n")
+
+    with open(training_output_filename, "a") as out_file:
+        out_file.write(
+            "epoche: %d\tloss: %.5f\taccuracy: %.5f\tprecision: %.5f\trecall: %.5f\tauroc: %.5f\tF1: %.5f\n" %
+            (actual_train_epochs, train_loss, train_accuracy,
+             train_precision, train_recall, train_auc, train_f1), )
+
+    with open(training_output_filename, "a") as out_file:
+        out_file.write(
+            "Risultati Validation:\nepoche:%d\tloss: %.5f\taccuracy: %.5f\tprecision: %.5f\trecall: %.5f\tauroc: %.5f\tF1: %.5f\n" %
+            (actual_train_epochs, val_loss, val_accuracy,
+             val_precision, val_recall, val_auc, val_f1), )
+
+def save_test_to_txt(score, epochs, batch_size, lr, k):
+    test_loss = score[0]
+    test_accuracy = score[1]
+    test_precision = score[2]
+    test_recall = score[3]
+    test_auc = score[4]
+    test_f1 = 2 * (test_precision * test_recall) / (test_precision + test_recall)
+
+    test_results_path = f"risultati_test_{k}K(epochs={epochs},batch_size={batch_size})"
+    #Path(test_results_path).mkdir(parents=True, exist_ok=True)
+
+    test_output_filename = f"{test_results_path}_{lr}_CnnRna.txt"
+    with open(test_output_filename, "w") as out_file:
+        out_file.write("Risultati test: \n")
+
+    with open(test_output_filename, "a") as out_file:
+        out_file.write("%s\tloss:%.5f\taccuracy:%.5f\tprecision:%.5f\trecall:%.5f\tauroc:%.5f\tF1:%.5f\n" %
+                       ("Risultati:", test_loss, test_accuracy,
+                        test_precision, test_recall, test_auc, test_f1), )
 
 main()

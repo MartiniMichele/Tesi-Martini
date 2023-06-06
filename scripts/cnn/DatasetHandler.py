@@ -8,16 +8,16 @@ import glob
 source_path = Path(__file__).resolve()
 source_dir = Path(source_path.parent.parent.parent)
 
-database = "lsu"
+database = "RF_DATASET_7K"
 livello = "eukaryota"
 completo = "%s_%s" % (database, livello)
 sottoclasse = "eukaryota"
 
-dataset_dir = Path(str(source_dir) + "/Classification/%s_DATASET/" % database.upper())
-data_dir = Path(str(source_dir) + "/Classification/IMMAGINI DA DIVIDERE/%s/" % (completo))
-train_dir = Path(str(source_dir) + "/Classification/IMMAGINI DA DIVIDERE/%s/%s/train/" % (completo, sottoclasse))
-valid_dir = Path(str(source_dir) + "/Classification/IMMAGINI DA DIVIDERE/%s/%s/valid/" % (completo, sottoclasse))
-test_dir = Path(str(source_dir) + "/Classification/IMMAGINI DA DIVIDERE/%s/%s/test/" % (completo, sottoclasse))
+dataset_dir = Path(str(source_dir) + "/Classification/DATASET/%s/" % database.upper())
+data_dir = Path(str(source_dir) + "/Classification/IMMAGINI DA DIVIDERE/%s/" % (database.upper()))
+train_dir = Path(str(source_dir) + "/Classification/DATASET/%s/train/" % (database.upper()))
+valid_dir = Path(str(source_dir) + "/Classification/DATASET/%s/valid/" % (database.upper()))
+test_dir = Path(str(source_dir) + "/Classification/DATASET/%s/test/" % (database.upper()))
 
 if os.path.isdir(train_dir) is False: os.makedirs(train_dir)
 if os.path.isdir(valid_dir) is False: os.makedirs(valid_dir)
@@ -29,6 +29,10 @@ sub_dir_path = []
 cerca tutte le sottocartelle relative al phylum(o superkingdom) e poi itera al loro interno per spostare i file secondo
 la proporzione 70/20/10 nelle rispettive cartelle train/valid/test
 '''
+
+'''
+scorre i file presenti all'interno di datadir e ne estrae il path solo se la cartella train_dir è vuota
+'''
 if len(os.listdir(train_dir)) == 0:
     for x in filelist:
         if x != "DATASET":
@@ -36,11 +40,14 @@ if len(os.listdir(train_dir)) == 0:
     for x in sub_dir_path:
         print(str(x))
 
+    '''
+    scorre i file precedentemente selezionati
+    '''
     for i in sub_dir_path:
         filelist2 = os.listdir(i)
         train_part = math.floor(len(filelist2) * 0.7)
         valid_part = math.floor(len(filelist2) * 0.2)
-        test_part = math.floor(len(filelist2) * 0.1) - 1
+        test_part = math.floor(len(filelist2) * 0.1)
         print("phylum: " + str(i))
         print("70: " + str(train_part))
         print("20: " + str(valid_part))
@@ -72,7 +79,7 @@ for file in os.listdir():
         phylum = file.split('_')[0]
         if os.path.isdir(phylum) is False:
             os.makedirs(phylum)
-            print("CARTELLA TRAIN CREATA")
+            print("CARTELLA PHYLUM TRAIN CREATA")
         dir_path = str(dataset_dir) + '/train/' + phylum
         print(f"il file è {str(file)}")
         if(os.path.isdir(dir_path) is False):
@@ -86,7 +93,7 @@ for file in os.listdir():
         phylum = file.split('_')[0]
         if os.path.isdir(phylum) is False:
             os.makedirs(phylum)
-            print("CARTELLA VALID CREATA")
+            print("CARTELLA PHYLUM VALID CREATA")
         dir_path = str(dataset_dir) + '/valid/' + phylum
         print(f"il file è {str(file)}")
         if (os.path.isdir(dir_path) is False):
@@ -100,7 +107,7 @@ for file in os.listdir():
         phylum = file.split('_')[0]
         if os.path.isdir(phylum) is False:
             os.makedirs(phylum)
-            print("CARTELLA TEST CREATA")
+            print("CARTELLA PHYLUM TEST CREATA")
         dir_path = str(dataset_dir) + '/test/' + phylum
         print(f"il file è {str(file)}")
         if (os.path.isdir(dir_path) is False):
