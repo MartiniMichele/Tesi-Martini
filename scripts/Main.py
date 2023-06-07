@@ -8,8 +8,8 @@ import platform
 Metodo per l'implementazione della CLI, sfrutta altri metodi per semplificare la lettura
 '''
 
-file_list = ["_LSU_rRNA_archaea.fa", "LSU_rRNA_eukarya.fa", "LSU_rRNA_bacteria.fa"]
-dataset_list = ["lsu_dataset_1K", "lsu_dataset_4K", "lsu_dataset_7K"]
+#file_list = ["_LSU_rRNA_archaea.fa", "LSU_rRNA_eukarya.fa", "LSU_rRNA_bacteria.fa"]
+dataset_list = ["RF_DATASET_1K", "RF_DATASET_4K", "RF_DATASET_7K"]
 kmer_list = [1, 4, 7]
 
 
@@ -51,7 +51,7 @@ def auto_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_
             k = int(dataset_directory.rsplit("_", 1)[1].replace("K", ""))
             print(f"DATASET UTILIZZATO: {dataset_directory}")
 
-            cnn_instance = CNN(dataset_directory, model_mk, batch_size, epochs, fl_filter, 3, n_dropout, drop_value,
+            cnn_instance = CNN(dataset_directory, model_mk, batch_size, epochs, fl_filter, 2, n_dropout, drop_value,
                                n_layer, lr, patience)
 
             print("RIEPILOGO RETE:")
@@ -62,12 +62,12 @@ def auto_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_
             ######## TRAIN
             ########################
             history = cnn_instance.train(model, datagen_list[0], datagen_list[1])
-            save_train_val_to_txt(history, epochs, batch_size, lr, k)
+            save_train_val_to_txt(history, epochs, batch_size, lr, k, dataset)
             ########################
             ######## TEST
             ########################
             score = cnn_instance.test_evaluate(model, datagen_list[2])
-            save_test_to_txt(score, epochs, batch_size, lr, k)
+            save_test_to_txt(score, epochs, batch_size, lr, k, dataset)
 
 
 def imgen_case():
@@ -123,7 +123,7 @@ def cnn_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_l
             cnn_instance.train(model, datagen_list[0], datagen_list[1])
 
 
-def save_train_val_to_txt(history, epochs, batch_size, lr, k):
+def save_train_val_to_txt(history, epochs, batch_size, lr, k, dataset):
     actual_train_epochs = len(history.history['loss'])
     train_loss = min(history.history['loss'])
     train_accuracy = max(history.history['accuracy'])
@@ -139,7 +139,7 @@ def save_train_val_to_txt(history, epochs, batch_size, lr, k):
     val_auc = max(history.history['val_auc'])
     val_f1 = 2 * (val_precision * val_recall) / (val_precision + val_recall)
 
-    train_results_path = f"risultati_training_{k}K(epochs={epochs},batch_size={batch_size})"
+    train_results_path = f"risultati_training_{dataset}_{k}K(epochs={epochs},batch_size={batch_size})"
     #Path(train_results_path).mkdir(parents=True, exist_ok=True)
 
     training_output_filename = f"{train_results_path}_{lr}_CnnRna.txt"
@@ -158,7 +158,7 @@ def save_train_val_to_txt(history, epochs, batch_size, lr, k):
             (actual_train_epochs, val_loss, val_accuracy,
              val_precision, val_recall, val_auc, val_f1), )
 
-def save_test_to_txt(score, epochs, batch_size, lr, k):
+def save_test_to_txt(score, epochs, batch_size, lr, k, dataset):
     test_loss = score[0]
     test_accuracy = score[1]
     test_precision = score[2]
@@ -166,7 +166,7 @@ def save_test_to_txt(score, epochs, batch_size, lr, k):
     test_auc = score[4]
     test_f1 = 2 * (test_precision * test_recall) / (test_precision + test_recall)
 
-    test_results_path = f"risultati_test_{k}K(epochs={epochs},batch_size={batch_size})"
+    test_results_path = f"risultati_test_{dataset}_{k}K(epochs={epochs},batch_size={batch_size})"
     #Path(test_results_path).mkdir(parents=True, exist_ok=True)
 
     test_output_filename = f"{test_results_path}_{lr}_CnnRna.txt"
