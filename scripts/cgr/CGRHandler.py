@@ -2,6 +2,7 @@ from scripts.cgr import CGRepresentation, FCGR
 import os
 from pathlib import Path
 from Bio.Seq import MutableSeq
+import pandas as pd
 
 from scripts.cgr.FCGR import FrequencyCGR
 from Levenshtein import distance as levenshtein_distance
@@ -25,10 +26,10 @@ class CGRHandler:
         self.data_dir = data_dir
         self.save_dir = save_dir
 
-
     '''
     Inizializza le cartelle utili alla CNN
     '''
+
     def init_dirs(self, save_dir):
         # cartelle urilizzate per l'esperimento
         self.data_dir = Path(str(self.source_dir) + "/FASTA/%s/" % self.data_dir)
@@ -52,7 +53,6 @@ class CGRHandler:
             self.init_dirs("/IMMAGINI_FCGR")
         else:
             self.init_dirs("/IMMAGINI_CGR")
-
 
         # Folder Path
         source_path = Path(__file__).resolve()
@@ -186,7 +186,7 @@ class CGRHandler:
             path = Path(str(self.save_dir) + "/CGR_RNA_" + str(counter) + ".png")
             drawer.plot(counter, path)
 
-    def read_file(self, k_list):
+    def read_file(self, k_list, is_subsequence, csv_name=""):
         self.init_dirs("/IMMAGINI_FCGR")
 
         # Folder Path
@@ -233,25 +233,59 @@ class CGRHandler:
                 print(f"La sequenza {i + 1} è stata aggiunta alla lista")
 
         print(f"Sono state trovate {len(similar_sequences)} sequenze non simili più dell'80%")
-        self.generate_dataset_from_list(similar_sequences, k_list, image_name)
+        self.generate_dataset_from_list(similar_sequences, k_list, image_name, is_subsequence, csv_name)
 
-    def generate_dataset_from_list(self, sequence_list, k_list, image_name):
+    def generate_dataset_from_list(self, sequence_list, k_list, image_name, is_subsequence, csv_name=""):
         for i, sequence in enumerate(sequence_list):
             counter = i + 1
             print(f"L'elemento {counter} è: {sequence}")
             bio_sequence = self.filter_sequence(sequence)
-            print("SEQUENZA UTILIZZATA: " + bio_sequence)
+
+            # TODO inserire generazione immagini da sotto-sequenza
+
+            if is_subsequence:
+                tmp_sequence = bio_sequence.replace("T", "U")
+                correct_sequence = self.get_subsequence(i, tmp_sequence, csv_name)
+            else:
+                correct_sequence = bio_sequence.replace("T", "U")
+
+            # TODO inserire generazione immagini da sotto-sequenza
+
+            print("SEQUENZA UTILIZZATA: " + correct_sequence)
             print("COUNTER: " + str(counter))
-            correct_sequence = bio_sequence.replace("T", "U")
+
             drawer = FrequencyCGR(correct_sequence)
-            #path = Path(str(self.save_dir) + f"/{image_name}_" + str(counter) + ".png")
+            # path = Path(str(self.save_dir) + f"/{image_name}_" + str(counter) + ".png")
 
             for k in k_list:
 
-                self.save_dir = self.save_dir if str(self.save_dir).endswith(str(k)) else Path(str(self.save_dir).rsplit("_", 1)[0] + "_" + "K" + str(k))
+                self.save_dir = self.save_dir if str(self.save_dir).endswith(str(k)) else Path(
+                    str(self.save_dir).rsplit("_", 1)[0] + "_" + "K" + str(k))
 
                 if os.path.isdir(self.save_dir) is False:
                     os.makedirs(self.save_dir)
                 print("K-MER ATTUALE: " + str(k))
                 path = Path(str(self.save_dir) + f"/{image_name}_" + str(counter) + ".png")
                 drawer.save_fcgr(k, path)
+
+    def get_subsequence(self, index, sequence, csv_name):
+        csv_path = Path(str(self.source_dir) + "/CSV/" + csv_name)
+        file = pd.read_csv(csv_path, usecols=["molecola", "start", "finish"])
+        sub_sequence = ""
+
+        sequence_found = False
+        for row in file.iloc:
+
+            molecola = row.get("molecola")
+
+            while sequence_found is False:
+
+                if index == molecola:
+                    start = row.get("start")
+                    finish = row.get("finish")
+
+                    sub_sequence = sequence[start - 1:finish]
+                    sequence_found = True
+            break
+
+        return sub_sequence

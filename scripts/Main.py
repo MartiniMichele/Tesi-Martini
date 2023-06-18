@@ -2,6 +2,7 @@ from scripts.cgr.CGRHandler import CGRHandler
 from scripts.cnn.CNN import CNN
 from scripts.cnn.ResultPlotter import ResultPlotter
 from pathlib import Path
+import pandas as pd
 import platform
 
 '''
@@ -46,6 +47,39 @@ Metodo di supporto a main, contiene il codice per la scelta della generazione de
 
 
 def auto_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_layer, lr, patience):
+
+    handler_istance = CGRHandler("RNA", False, False, "_LSU_rRNA_archaea - Copia.fa", "prova_image")
+    handler_istance.read_file(kmer_list, True, "sub_strings.csv")
+    '''
+    csv_path = Path("C:/Users/Michele/Documents/GitHub/Tesi-Martini/CSV")
+    file = pd.read_csv(Path(str(csv_path) + "/sub_strings.csv"), usecols=["molecola", "start", "finish"])
+
+    print("FILE: \n")
+    print(file)
+
+    print("\nFILE KEYS:")
+    print(file.keys())
+
+    print("\nMOLECOLA:")
+    print(file.get("molecola"))
+
+    print("\nLEN MOLECOLA:")
+    print(len(file.get("molecola")))
+
+    for i in file.get("molecola"):
+        print("ciclo for:")
+        print(i)
+
+    for row in file.iloc:
+        print("\nROW:")
+        print(row)
+        print("\nSTART:")
+        print(row.get("start"))
+
+        print("\nFINISH:")
+        print(row.get("finish"))
+
+    
     for dataset in dataset_list:
             dataset_directory = dataset.upper()
             k = int(dataset_directory.rsplit("_", 1)[1].replace("K", ""))
@@ -68,7 +102,7 @@ def auto_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_
             ########################
             score = cnn_instance.test_evaluate(model, datagen_list[2])
             save_test_to_txt(score, epochs, batch_size, lr, k, dataset)
-
+'''
 
 def imgen_case():
     fasta_directory = input(
@@ -88,8 +122,19 @@ def imgen_case():
                 "\nINSERIRE IL NOME DELLA CARTELLA IN CUI SI SALVARE LE IMMAGINI (sottocartella di "
                 "'IMMAGINI FCGR')").lower()
             k = input("SCEGLIERE LUNGHEZZA DEI K-MER: ")
-            handler_istance = CGRHandler("RNA", False, False, fasta_directory, images_directory)
-            handler_istance.read_file(kmer_list)
+
+            is_subsequence = input("VUOI CONSIDERARE SOLAMENTE UNA SOTTOSEQUENZA? \nS: SI \n N: NO \nla tua scelta: ")
+
+            match is_subsequence:
+                case "S":
+                    csv_name = input(
+                        "\nINSERIRE IL NOME DEL FILE CSV (sottocartella di "
+                        "'CSV')")
+                    handler_istance = CGRHandler("RNA", False, False, fasta_directory, images_directory)
+                    handler_istance.read_file(kmer_list, True, csv_name)
+                case "N":
+                    handler_istance = CGRHandler("RNA", False, False, fasta_directory, images_directory)
+                    handler_istance.read_file(kmer_list, False)
 
 
 '''
