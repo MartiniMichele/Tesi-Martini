@@ -203,45 +203,51 @@ class CGRHandler:
             for line in f:
                 if line.startswith('>'):
                     if seq:
-                        sequences.append(seq)
-                        seq = ''
+                        if len(sequences) < 10000:
+                            sequences.append(seq)
+                            seq = ''
                 else:
                     seq += line.strip()
-            sequences.append(seq)
+            if len(sequences) < 10000:
+                sequences.append(seq)
 
-        '''
-        Metodo usato per comparare due sequenze
-        '''
+        # no_duplicate_sequences = self.delete_duplicates(sequences)
+        # print(f"Sono state trovate {len(no_duplicate_sequences)} sequenze diverse")
+        self.generate_dataset_from_list(sequences, k_list, image_name, is_subsequence, csv_name)
 
-        def similarity(seq1, seq2):
-            edit_distance = levenshtein_distance(seq1, seq2)
-            max_length = max(len(seq1), len(seq2))
-            return 1 - (edit_distance / max_length)
+    '''
+    Metodo usato per comparare due sequenze
+    '''
 
-        similar_sequences = [sequences[0]]
-        for i in range(1, len(sequences)):
-            is_similar = False
-            for j, seq in enumerate(similar_sequences):
-                sim = similarity(sequences[i], seq)
-                if sim > 0.8:
-                    is_similar = True
-                    print(
-                        f"La sequenza {i + 1} è simile di più dell'80% alla sequenza {j + 1} già inserita nella lista")
+    def delete_duplicates_list(self, sequences):
+        nd_sequences = [sequences[0]]
+
+        for element in range(1, len(sequences)):
+            for nd_element in nd_sequences:
+                if not element == nd_element:
+                    nd_sequences.append(element)
+                else:
+                    print(f"Sequenza {element} uguale a {nd_element}")
                     break
-            if not is_similar:
-                similar_sequences.append(sequences[i])
-                print(f"La sequenza {i + 1} è stata aggiunta alla lista")
 
-        print(f"Sono state trovate {len(similar_sequences)} sequenze non simili più dell'80%")
-        self.generate_dataset_from_list(similar_sequences, k_list, image_name, is_subsequence, csv_name)
+        return nd_sequences
+
+    def delete_duplicates_string(self, nd_sequences, str_sequence):
+
+        for element in nd_sequences:
+            if element != str_sequence:
+                nd_sequences.append(str_sequence)
+                return str_sequence
+            else:
+                print(f"Sequenza {element} uguale a {str_sequence}")
+                return False
 
     def generate_dataset_from_list(self, sequence_list, k_list, image_name, is_subsequence, csv_name=""):
+        no_duplicates_list = []
         for i, sequence in enumerate(sequence_list):
             counter = i + 1
             print(f"L'elemento {counter} è: {sequence}")
             bio_sequence = self.filter_sequence(sequence)
-
-            # TODO inserire generazione immagini da sotto-sequenza
 
             if is_subsequence:
                 tmp_sequence = bio_sequence.replace("T", "U")
@@ -249,26 +255,30 @@ class CGRHandler:
             else:
                 correct_sequence = bio_sequence.replace("T", "U")
 
-            # TODO inserire generazione immagini da sotto-sequenza
+            if i == 0:
+                no_duplicates_list.append(correct_sequence)
 
-            print("SEQUENZA UTILIZZATA: " + correct_sequence)
-            print("COUNTER: " + str(counter))
+            if self.delete_duplicates_string(no_duplicates_list, correct_sequence):
+                print("SEQUENZA UTILIZZATA: " + correct_sequence)
+                print("COUNTER: " + str(counter))
 
-            drawer = FrequencyCGR(correct_sequence)
-            # path = Path(str(self.save_dir) + f"/{image_name}_" + str(counter) + ".png")
+                drawer = FrequencyCGR(correct_sequence)
+                # path = Path(str(self.save_dir) + f"/{image_name}_" + str(counter) + ".png")
 
-            for k in k_list:
+                for k in k_list:
 
-                self.save_dir = self.save_dir if str(self.save_dir).endswith(str(k)) else Path(
-                    str(self.save_dir).rsplit("_", 1)[0] + "_" + "K" + str(k))
+                    self.save_dir = self.save_dir if str(self.save_dir).endswith(str(k)) else Path(
+                        str(self.save_dir).rsplit("_", 1)[0] + "_" + "K" + str(k))
 
-                if os.path.isdir(self.save_dir) is False:
-                    os.makedirs(self.save_dir)
-                print("K-MER ATTUALE: " + str(k))
-                path = Path(str(self.save_dir) + f"/{image_name}_" + str(counter) + ".png")
-                drawer.save_fcgr(k, path)
+                    if os.path.isdir(self.save_dir) is False:
+                        os.makedirs(self.save_dir)
+                    print("K-MER ATTUALE: " + str(k))
+                    path = Path(str(self.save_dir) + f"/{image_name}_" + str(counter) + ".png")
+                    drawer.save_fcgr(k, path)
 
     def get_subsequence(self, index, sequence, csv_name):
+        sub_sequence = sequence[0:150]
+        '''
         csv_path = Path(str(self.source_dir) + "/CSV/" + csv_name)
         file = pd.read_csv(csv_path, usecols=["molecola", "start", "finish"])
         sub_sequence = ""
@@ -287,5 +297,5 @@ class CGRHandler:
                     sub_sequence = sequence[start - 1:finish]
                     sequence_found = True
             break
-
+        '''
         return sub_sequence

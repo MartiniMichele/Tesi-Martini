@@ -8,7 +8,7 @@ import glob
 source_path = Path(__file__).resolve()
 source_dir = Path(source_path.parent.parent.parent)
 
-database = "RF_DATASET_7K"
+database = "RF_2_DATASET_7K"
 livello = "eukaryota"
 completo = "%s_%s" % (database, livello)
 sottoclasse = "eukaryota"

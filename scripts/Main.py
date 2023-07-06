@@ -9,8 +9,8 @@ import platform
 Metodo per l'implementazione della CLI, sfrutta altri metodi per semplificare la lettura
 '''
 
-#file_list = ["_LSU_rRNA_archaea.fa", "LSU_rRNA_eukarya.fa", "LSU_rRNA_bacteria.fa"]
-dataset_list = ["RF_DATASET_1K", "RF_DATASET_4K", "RF_DATASET_7K"]
+file_list = ["RF00001_5S.fa", "RF00177_rRNA_SSU.fa", "RF02541_rRNA_LSU.fa"]
+dataset_list = ["RF_2_DATASET_1K", "RF_2_DATASET_4K", "RF_2_DATASET_7K"]
 kmer_list = [1, 4, 7]
 
 
@@ -47,45 +47,24 @@ Metodo di supporto a main, contiene il codice per la scelta della generazione de
 
 
 def auto_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_layer, lr, patience):
-
-    handler_istance = CGRHandler("RNA", False, False, "_LSU_rRNA_archaea - Copia.fa", "prova_image")
-    handler_istance.read_file(kmer_list, True, "sub_strings.csv")
     '''
-    csv_path = Path("C:/Users/Michele/Documents/GitHub/Tesi-Martini/CSV")
-    file = pd.read_csv(Path(str(csv_path) + "/sub_strings.csv"), usecols=["molecola", "start", "finish"])
+    for file in file_list:
+        handler_istance = CGRHandler("RNA", False, False, file, file.split(".")[0] + "_images")
+        handler_istance.read_file(kmer_list, True)
 
-    print("FILE: \n")
-    print(file)
+    #handler_istance = CGRHandler("RNA", False, False, "_LSU_rRNA_archaea - Copia.fa", "prova_image")
+    #handler_istance.read_file(kmer_list, True, "sub_strings.csv")
 
-    print("\nFILE KEYS:")
-    print(file.keys())
+    #csv_path = Path("C:/Users/Michele/Documents/GitHub/Tesi-Martini/CSV")
+    #file = pd.read_csv(Path(str(csv_path) + "/sub_strings.csv"), usecols=["molecola", "start", "finish"])
 
-    print("\nMOLECOLA:")
-    print(file.get("molecola"))
-
-    print("\nLEN MOLECOLA:")
-    print(len(file.get("molecola")))
-
-    for i in file.get("molecola"):
-        print("ciclo for:")
-        print(i)
-
-    for row in file.iloc:
-        print("\nROW:")
-        print(row)
-        print("\nSTART:")
-        print(row.get("start"))
-
-        print("\nFINISH:")
-        print(row.get("finish"))
-
-    
+    '''
     for dataset in dataset_list:
             dataset_directory = dataset.upper()
             k = int(dataset_directory.rsplit("_", 1)[1].replace("K", ""))
             print(f"DATASET UTILIZZATO: {dataset_directory}")
 
-            cnn_instance = CNN(dataset_directory, model_mk, batch_size, epochs, fl_filter, 2, n_dropout, drop_value,
+            cnn_instance = CNN(dataset_directory, model_mk, batch_size, epochs, fl_filter, 3, n_dropout, drop_value,
                                n_layer, lr, patience)
 
             print("RIEPILOGO RETE:")
@@ -102,7 +81,7 @@ def auto_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_
             ########################
             score = cnn_instance.test_evaluate(model, datagen_list[2])
             save_test_to_txt(score, epochs, batch_size, lr, k, dataset)
-'''
+
 
 def imgen_case():
     fasta_directory = input(

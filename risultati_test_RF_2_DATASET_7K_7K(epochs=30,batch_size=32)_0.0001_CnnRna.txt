@@ -1,0 +1,2 @@
+Risultati test: 
+Risultati:	loss:0.07598	accuracy:0.98365	precision:0.98365	recall:0.98365	auroc:0.99670	F1:0.98365

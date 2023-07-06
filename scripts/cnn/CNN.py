@@ -184,7 +184,6 @@ class CNN:
 
         model.compile(loss='categorical_crossentropy', optimizer=RMSprop(learning_rate=self.lr),
                       metrics=['accuracy', 'Precision', 'Recall', 'AUC'])
-
         self.init_singularity_dirs()
         return model
 
