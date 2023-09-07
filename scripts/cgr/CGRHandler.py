@@ -59,27 +59,24 @@ class CGRHandler:
         source_dir = Path(source_path.parent.parent.parent)
         path = Path(str(source_dir) + "/FASTA/%s" % self.source)
         counter = 1
-        # Change the directory
-        os.chdir(path)
 
-        # Read text File
+        sequences = []
 
-        def read_fasta_file(file_path):
-            with open(file_path, 'r') as f:
-                line = f.readline()
-                self.sequence = line.replace("\n", "")
-
-        # iterate through all file
-        for file in os.listdir():
-            # Check whether file is in text format or not
-            if file.endswith(".fasta"):
-                file_path = f"{path}\{file}"
-
-                # call read text file function
-                read_fasta_file(file_path)
-                print(file_path)
-                self.generate_dataset(counter, isFCGR, k)
-                counter += 1
+        with open(path, 'r') as f:
+            tmp_str = f.name.split(".")[0].split("_")
+            image_name = tmp_str[len(tmp_str) - 1]
+            seq = ''
+            for line in f:
+                if line.startswith('>'):
+                    if seq:
+                        if len(sequences) < 5000:
+                            sequences.append(seq)
+                            seq = ''
+                else:
+                    seq += line.strip()
+            if len(sequences) < 5000:
+                sequences.append(seq)
+        self.generate_cgr_from_list(sequences, image_name, False)
 
     '''
     Questo metodo filtra le sequenze rimuovendo i caratteri che causano ambiguità
@@ -299,3 +296,39 @@ class CGRHandler:
             break
         '''
         return sub_sequence
+
+    def generate_cgr_from_list(self, sequence_list, image_name, is_subsequence, csv_name=""):
+        no_duplicates_list = []
+        for i, sequence in enumerate(sequence_list):
+            counter = i + 1
+            print(f"L'elemento {counter} è: {sequence}")
+            bio_sequence = self.filter_sequence(sequence)
+
+            if is_subsequence:
+                tmp_sequence = bio_sequence.replace("T", "U")
+                correct_sequence = self.get_subsequence(i, tmp_sequence, csv_name)
+            else:
+                correct_sequence = bio_sequence.upper()
+                self.filter_sequence(bio_sequence)
+                correct_sequence = correct_sequence.replace("T", "U")
+
+            if i == 0:
+                no_duplicates_list.append(correct_sequence)
+
+            if self.delete_duplicates_string(no_duplicates_list, correct_sequence):
+                print("SEQUENZA UTILIZZATA: " + correct_sequence)
+                print("COUNTER: " + str(counter))
+
+                # drawer = CGRepresentation(bio_sequence, self.CGR_type, self.outer_representation, self.rna_2structure)
+                # path = Path(str(self.save_dir) + f"/{image_name}_" + str(counter) + ".png")
+
+                drawer = CGRepresentation.CGR(correct_sequence, self.CGR_type, self.outer_representation, self.rna_2structure)
+
+                #self.save_dir = self.save_dir if str(self.save_dir).endswith(str(k)) else Path(
+                #    str(self.save_dir).rsplit("_", 1)[0] + "_" + "K" + str(k))
+
+                if os.path.isdir(self.save_dir) is False:
+                    os.makedirs(self.save_dir)
+                #print("K-MER ATTUALE: " + str(k))
+                path = Path(str(self.save_dir) + f"/{image_name}_" + str(counter) + ".png")
+                drawer.plot(counter, path)

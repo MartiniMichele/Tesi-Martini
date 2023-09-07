@@ -9,8 +9,9 @@ import platform
 Metodo per l'implementazione della CLI, sfrutta altri metodi per semplificare la lettura
 '''
 
-file_list = ["RF00001_5S.fa", "RF00177_rRNA_SSU.fa", "RF02541_rRNA_LSU.fa"]
-dataset_list = ["RF_2_DATASET_1K", "RF_2_DATASET_4K", "RF_2_DATASET_7K"]
+file_list = ["RF00001_5S.fa", "RF00177_rRNA_SSU.fa", "RF02541_rRNA_LSU.fa", "RF00002_5.8S.fa", "LSU_rRNA_eukarya.fa", "LSU_rRNA_bacteria.fa", "LSU_rRNA_archaea.fa"]
+dataset_list = ["CGR_RF_DATASET", "CGR_RF-2_DATASET"]
+# "CGR_LSU_DATASET",
 kmer_list = [1, 4, 7]
 
 
@@ -50,13 +51,40 @@ def auto_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_
     '''
     for file in file_list:
         handler_istance = CGRHandler("RNA", False, False, file, file.split(".")[0] + "_images")
-        handler_istance.read_file(kmer_list, True)
-
+        handler_istance.read_files(False, 1)
+    '''
     #handler_istance = CGRHandler("RNA", False, False, "_LSU_rRNA_archaea - Copia.fa", "prova_image")
     #handler_istance.read_file(kmer_list, True, "sub_strings.csv")
 
-    #csv_path = Path("C:/Users/Michele/Documents/GitHub/Tesi-Martini/CSV")
-    #file = pd.read_csv(Path(str(csv_path) + "/sub_strings.csv"), usecols=["molecola", "start", "finish"])
+    for dataset in dataset_list:
+        dataset_directory = dataset.upper()
+
+        if dataset_directory == "CGR_RF_DATASET":
+            cnn_instance = CNN(dataset_directory, model_mk, batch_size, epochs, fl_filter, 2, n_dropout, drop_value,
+                               n_layer, lr, patience)
+        else:
+            cnn_instance = CNN(dataset_directory, model_mk, batch_size, epochs, fl_filter, 3, n_dropout, drop_value,
+                               n_layer, lr, patience)
+
+        print(f"DATASET UTILIZZATO: {dataset_directory}")
+
+
+
+        print("RIEPILOGO RETE:")
+        model = cnn_instance.create_model()
+        print("----------GENERAZIONE BATCH DI DATI ED INIZIO TRAINING----------")
+        datagen_list = cnn_instance.datagen()
+        ########################
+        ######## TRAIN
+        ########################
+        history = cnn_instance.train(model, datagen_list[0], datagen_list[1])
+        save_train_val_to_txt(history, epochs, batch_size, lr, 0, dataset)
+        ########################
+        ######## TEST
+        ########################
+        score = cnn_instance.test_evaluate(model, datagen_list[2])
+        save_test_to_txt(score, epochs, batch_size, lr, 0, dataset)
+
 
     '''
     for dataset in dataset_list:
@@ -81,7 +109,7 @@ def auto_case(model_mk, batch_size, epochs, fl_filter, n_dropout, drop_value, n_
             ########################
             score = cnn_instance.test_evaluate(model, datagen_list[2])
             save_test_to_txt(score, epochs, batch_size, lr, k, dataset)
-
+'''
 
 def imgen_case():
     fasta_directory = input(
